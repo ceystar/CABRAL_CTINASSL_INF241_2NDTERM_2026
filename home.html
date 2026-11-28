@@ -1,0 +1,352 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-Sumbong | Community Reports</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Raleway:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="bar">
+
+    <a class="logo" href="#" data-go="home" aria-label="E-Sumbong home">
+      <img src="assets/image/logo.png" alt="E-Sumbong Logo">
+    </a>
+
+    <nav class="nav">
+      <a href="#" data-go="home">Home</a>
+      <a href="#" data-go="announcements">Announcements</a>
+      <a href="#" data-go="map">Map</a>
+      <a href="#" data-go="report">Report</a>
+    </nav>
+
+    <div class="acct">
+      <button class="btn" data-go="report">Report an issue</button>
+
+      <button class="avatar" id="avatarBtn" aria-label="Account menu">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10zm0 2c-4.4 0-8 2.2-8 5v3h16v-3c0-2.8-3.6-5-8-5z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="menu hidden" id="menu">
+      <p>Signed in as <b id="who"></b></p>
+      <button id="logoutBtn">Sign out</button>
+    </div>
+
+  </div>
+</header>
+
+<main>
+
+<!-- HOME -->
+<section id="view-home">
+
+  <div class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <h1>Report it. Track it. Get it fixed.</h1>
+
+        <p class="lead">
+          Spotted a damaged road, a flooded street or a broken streetlight?
+          Send a report to the city in two minutes and follow its progress
+          with a reference code.
+        </p>
+
+        <div class="row">
+          <button class="btn light big" data-go="report">Report an issue</button>
+          <button class="btn ghost big" data-go="map">View the map</button>
+        </div>
+      </div>
+
+      <div class="stats" aria-label="Report summary">
+        <div><b id="stTotal">0</b><span>Reports filed</span></div>
+        <div><b id="stPending">0</b><span>Waiting for review</span></div>
+        <div><b id="stReviewing">0</b><span>Being reviewed</span></div>
+        <div><b id="stResolved">0</b><span>Resolved</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap section">
+    <h2>How it works</h2>
+
+    <ol class="steps">
+      <li>
+        <h3>Describe the problem</h3>
+        <p>Choose a category, say what happened and where. Add a photo if you have one.</p>
+      </li>
+      <li>
+        <h3>We send it to the right office</h3>
+        <p>Your report is shared with the city office that handles it.</p>
+      </li>
+      <li>
+        <h3>Follow the progress</h3>
+        <p>Use your reference code to see when it's reviewed and resolved.</p>
+      </li>
+    </ol>
+  </div>
+
+  <div class="wrap section">
+    <div class="section-head">
+      <h2>Reports on the map</h2>
+      <button class="linkbtn" data-go="map">Open full map</button>
+    </div>
+
+    <div class="map-wrap">
+      <div id="homeMap" class="minimap"></div>
+    </div>
+  </div>
+
+  <div class="wrap section" id="reports">
+
+    <div class="section-head">
+      <h2>Recent reports</h2>
+      <button class="linkbtn" id="viewAll">View all</button>
+    </div>
+
+    <div class="toolbar">
+      <input id="search" type="search"
+        placeholder="Search by reference code, category or location"
+        aria-label="Search reports">
+
+      <div class="chips" id="chips" role="group" aria-label="Filter by status">
+        <button class="chip active" data-filter="All">All</button>
+        <button class="chip" data-filter="Pending">Pending</button>
+        <button class="chip" data-filter="Reviewing">Reviewing</button>
+        <button class="chip" data-filter="Resolved">Resolved</button>
+      </div>
+    </div>
+
+    <div id="reportList" class="grid"></div>
+  </div>
+
+</section>
+
+<!-- ANNOUNCEMENTS -->
+<section id="view-announcements" class="hidden">
+
+  <div class="page-title">
+    <div class="wrap">
+      <h1>Announcements</h1>
+      <p>Updates from city offices.</p>
+    </div>
+  </div>
+
+  <div class="wrap section narrow">
+
+    <div class="ann">
+      <h3>Road repairs along Recto Avenue</h3>
+      <small>Nov 18, 2026 · Department of Public Works</small>
+      <p>Partial lane closures from 10 PM to 5 AM. Please take alternate routes.</p>
+    </div>
+
+    <div class="ann">
+      <h3>Typhoon preparedness advisory</h3>
+      <small>Nov 15, 2026 · Manila DRRMO</small>
+      <p>Secure loose objects, charge your phones, and know your barangay evacuation center.</p>
+    </div>
+
+    <div class="ann">
+      <h3>E-Sumbong now accepts photo attachments</h3>
+      <small>Nov 10, 2026 · City IT Office</small>
+      <p>Attach a photo when you report so the response team can act faster.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- REPORT FORM -->
+<section id="view-report" class="hidden">
+
+  <div class="page-title">
+    <div class="wrap">
+      <h1>Submit a report</h1>
+      <p>Provide the details of the incident. Fields are required unless marked optional.</p>
+    </div>
+  </div>
+
+  <div class="wrap section narrow">
+    <div class="form-card">
+
+      <form id="reportForm" novalidate>
+
+        <div class="field">
+          <label for="category">Incident category</label>
+
+          <select id="category" required>
+            <option value="">Select incident category</option>
+            <option>Road Problems</option>
+            <option>Flooding / Drainage</option>
+            <option>Streetlight Outage</option>
+            <option>Garbage / Sanitation</option>
+            <option>Public Safety Hazard</option>
+            <option>Other</option>
+          </select>
+
+          <div class="msg">Please choose a category.</div>
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+
+          <textarea id="description"
+            placeholder="Describe what happened..."
+            required minlength="10"></textarea>
+
+          <div class="help"><span id="count">0</span> / 300</div>
+          <div class="msg">Please describe the incident (at least 10 characters).</div>
+        </div>
+
+        <div class="field">
+          <label for="location">Location</label>
+
+          <input id="location" list="districts"
+            placeholder="Enter incident location" required>
+
+          <datalist id="districts"></datalist>
+
+          <div class="help">
+            Pick a district for an accurate map pin, or type your own address.
+          </div>
+
+          <div class="msg">Please enter the location.</div>
+        </div>
+
+        <div class="field">
+          <label>Pin the exact spot (optional)</label>
+
+          <div class="map-wrap">
+            <div id="pickMap"></div>
+          </div>
+
+          <div class="help">
+            Click the map to drop a pin. The location above fills in for you.
+            <button type="button" class="linkbtn" id="pickLocate">Use my location</button>
+          </div>
+        </div>
+
+        <div class="attach">
+          <span>Photo (optional)</span>
+
+          <button type="button" class="btn ghost-dark small" id="uploadBtn">
+            Choose photo
+          </button>
+
+          <input type="file" id="file" accept="image/*" hidden>
+          <span id="fileName"></span>
+        </div>
+
+        <div class="preview" id="preview"></div>
+
+        <div class="submit-row">
+          <button type="submit" class="btn big">Submit report</button>
+          <button type="button" class="btn ghost-dark big" id="draftBtn">Save draft</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- MAP -->
+<section id="view-map" class="hidden">
+
+  <div class="page-title">
+    <div class="wrap">
+      <h1>Report map</h1>
+      <p>See where issues have been reported in the city.</p>
+    </div>
+  </div>
+
+  <div class="wrap section">
+
+    <form class="mapbar" id="mapSearch" role="search">
+      <input id="mapQ" type="search"
+        placeholder="Search an address or landmark"
+        aria-label="Search the map">
+
+      <button class="btn" type="submit">Search</button>
+
+      <button class="btn ghost-dark" type="button" id="locateBtn">
+        My location
+      </button>
+    </form>
+
+    <div class="legend">
+      <span><i style="background:#a06a00"></i>Pending</span>
+      <span><i style="background:#3870ba"></i>Reviewing</span>
+      <span><i style="background:#2e6b34"></i>Resolved</span>
+    </div>
+
+    <div class="map-wrap">
+      <div id="map"></div>
+    </div>
+
+    <div style="margin-top:20px">
+      <button class="btn big" data-go="report">Report an issue</button>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="wrap foot-grid">
+
+    <div>
+      <a class="logo">
+        <span class="e">E</span>
+        <span class="rest">
+          <span>-SUM</span>
+          <span>BONG</span>
+        </span>
+      </a>
+
+      <p>A community reporting portal for Manila.</p>
+    </div>
+
+    <div>
+      <h3>Explore</h3>
+      <a href="#" data-go="home">Home</a>
+      <a href="#" data-go="announcements">Announcements</a>
+      <a href="#" data-go="map">Map</a>
+      <a href="#" data-go="report">Report an issue</a>
+    </div>
+
+    <div>
+      <h3>Need help?</h3>
+      <p>In an emergency, call 911 first.</p>
+      <button class="linkbtn" id="contactsBtn">Contact numbers</button>
+    </div>
+
+  </div>
+
+  <div class="wrap copy">
+    © 2026 E-Sumbong. Sample portal for demonstration.
+  </div>
+</footer>
+
+</div><!-- END APP -->
+
+<div id="modalRoot"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

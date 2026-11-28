@@ -1,6 +1,39 @@
-
 /* ---------- Configuration ---------- */
 const API_URL = "http://localhost:5000/api/reports";
+
+/* ---------- Authentication Check ---------- */
+function load(k, fallback) {
+  try {
+    const v = localStorage.getItem(k);
+    return v ? JSON.parse(v) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function save(k, v) {
+  try {
+    localStorage.setItem(k, JSON.stringify(v));
+  } catch (e) {
+    toast("Storage is full.");
+  }
+}
+
+let user = load("esumbong_user", null);
+
+if (!user || !user.name) {
+  window.location.href = "index.html";
+}
+
+const $ = s => document.querySelector(s);
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#39;"
+}[c]));
 
 /* ---------- Data ---------- */
 const DISTRICTS = {
@@ -20,56 +53,7 @@ const DISTRICTS = {
 
 let reports = [];
 let draft = load("esumbong_draft", null);
-let user = load("esumbong_user", null);
 let attachment = null, map = null, markers = [];
-
-function load(k, fallback) {
-  try {
-    const v = localStorage.getItem(k);
-    return v ? JSON.parse(v) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function save(k, v) {
-  try {
-    localStorage.setItem(k, JSON.stringify(v));
-  } catch (e) {
-    toast("Storage is full.");
-  }
-}
-
-const $ = s => document.querySelector(s);
-
-const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({
-  "&":"&amp;",
-  "<":"&lt;",
-  ">":"&gt;",
-  '"':"&quot;",
-  "'":"&#39;"
-}[c]));
-
-/* ---------- API: GET Reports ---------- */
-async function fetchReports() {
-  try {
-    const response = await fetch(API_URL);
-
-    if (!response.ok) {
-      throw new Error("Unable to load reports.");
-    }
-
-    reports = await response.json();
-    renderReports();
-
-    if (views.home) initMap("home", "homeMap");
-    if (views.main) initMap("main", "map");
-
-  } catch (error) {
-    console.error(error);
-    toast("Could not connect to the backend.");
-  }
-}
 
 /* ---------- Navigation ---------- */
 function go(view) {
@@ -101,6 +85,7 @@ function go(view) {
 
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-go]");
+
   if (t) {
     e.preventDefault();
     go(t.dataset.go);
@@ -110,119 +95,12 @@ document.addEventListener("click", e => {
     $("#menu").classList.add("hidden");
 });
 
-/* ---------- Login ---------- */
-function showApp() {
-  $("#login").classList.add("hidden");
-  $("#app").classList.remove("hidden");
-  $("#who").textContent = user.name;
-  go("home");
-  fetchReports();
-}
-
-let users = load("esumbong_users", []);
-
-function setAuth(mode) {
-  const up = mode === "up";
-
-  $("#loginForm").classList.toggle("hidden", up);
-  $("#registerForm").classList.toggle("hidden", !up);
-  $("#tabIn").setAttribute("aria-selected", !up);
-  $("#tabUp").setAttribute("aria-selected", up);
-  $("#authTitle").textContent = up ? "Create your account" : "Welcome back";
-  $("#authSub").textContent = up
-    ? "Register to start reporting issues in your community."
-    : "Sign in to report and track community issues.";
-
-  $("#loginErr").textContent = "";
-  $("#regErr").textContent = "";
-}
-
-document.querySelectorAll("[data-auth]").forEach(b =>
-  b.onclick = () => setAuth(b.dataset.auth)
-);
-
-document.querySelectorAll("[data-show]").forEach(c =>
-  c.onchange = () =>
-    document.querySelectorAll(c.dataset.show).forEach(i =>
-      i.type = c.checked ? "text" : "password"
-    )
-);
-
-$("#loginForm").addEventListener("submit", e => {
-  e.preventDefault();
-
-  const u = $("#username").value.trim();
-  const p = $("#password").value;
-  const err = $("#loginErr");
-
-  if (!u || !p) {
-    err.textContent = "Enter your username and password.";
-    return;
-  }
-
-  const found = users.find(x =>
-    x.username.toLowerCase() === u.toLowerCase() &&
-    x.password === p
-  );
-
-  if (!found) {
-    err.textContent = "Wrong username or password. New here? Choose Register above.";
-    return;
-  }
-
-  user = {name:found.username};
-  save("esumbong_user", user);
-  err.textContent = "";
-  showApp();
-});
-
-$("#registerForm").addEventListener("submit", e => {
-  e.preventDefault();
-
-  const u = $("#regUser").value.trim();
-  const p = $("#regPass").value;
-  const p2 = $("#regPass2").value;
-  const err = $("#regErr");
-
-  if (u.length < 3) {
-    err.textContent = "Username must be at least 3 characters.";
-    return;
-  }
-
-  if (users.some(x => x.username.toLowerCase() === u.toLowerCase())) {
-    err.textContent = "That username is taken. Try another one.";
-    return;
-  }
-
-  if (p.length < 4) {
-    err.textContent = "Password must be at least 4 characters.";
-    return;
-  }
-
-  if (p !== p2) {
-    err.textContent = "Passwords don't match.";
-    return;
-  }
-
-  users.push({username:u, password:p});
-  save("esumbong_users", users);
-
-  user = {name:u};
-  save("esumbong_user", user);
-  $("#registerForm").reset();
-  showApp();
-});
+/* ---------- User Display & Logout ---------- */
+$("#who").textContent = user.name;
 
 $("#logoutBtn").onclick = () => {
-  try {
-    localStorage.removeItem("esumbong_user");
-  } catch {}
-
-  user = null;
-  $("#app").classList.add("hidden");
-  $("#login").classList.remove("hidden");
-  $("#password").value = "";
-  setAuth("in");
+  localStorage.removeItem("esumbong_user");
+  window.location.href = "index.html";
 };
 
 $("#avatarBtn").onclick = e => {
@@ -256,22 +134,6 @@ function toast(msg) {
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 3000);
 }
-
-$("#termsBtn").onclick = () => modal(`
-  <h2>Terms &amp; Conditions</h2>
-  <ul>
-    <li>Submit only truthful and accurate reports.</li>
-    <li>Do not upload content that is offensive or unrelated to the incident.</li>
-    <li>Your report may be shared with the proper city offices for action.</li>
-    <li>Emergencies: call 911 first, then file a report here.</li>
-  </ul>
-`);
-
-$("#forgotBtn").onclick = () => modal(`
-  <h2>Forgot password</h2>
-  <p>Contact the City IT Office to reset your account.</p>
-  <p><b>Email:</b> support@esumbong.example</p>
-`);
 
 $("#contactsBtn").onclick = () => modal(`
   <h2>Contacts</h2>
@@ -395,6 +257,26 @@ $("#viewAll").onclick = () => {
   showAll = !showAll;
   renderReports();
 };
+
+/* ---------- API: GET Reports ---------- */
+async function fetchReports() {
+  try {
+    const response = await fetch(API_URL);
+
+    if (!response.ok)
+      throw new Error("Unable to load reports.");
+
+    reports = await response.json();
+    renderReports();
+
+    if (views.home) initMap("home", "homeMap");
+    if (views.main) initMap("main", "map");
+
+  } catch (error) {
+    console.error(error);
+    toast("Could not connect to the backend.");
+  }
+}
 
 /* ---------- API: UPDATE Report ---------- */
 $("#reportList").addEventListener("change", async e => {
@@ -525,6 +407,9 @@ function rnd(n, chars) {
 }
 
 /* ---------- API: CREATE Report ---------- */
+let picker = null, pickMarker = null, picked = null;
+const views = {};
+
 $("#reportForm").addEventListener("submit", async e => {
   e.preventDefault();
 
@@ -632,9 +517,6 @@ const COLORS = {
   Resolved:"#2e6b34"
 };
 
-const views = {};
-let picker = null, pickMarker = null, picked = null;
-
 const pin = st => L.divIcon({
   className:"",
   html:`<span class="pin" style="background:${COLORS[st] || "#7a1414"}"></span>`,
@@ -652,7 +534,7 @@ function baseMap(id) {
   const m = L.map(id).setView([14.5995,120.9842],13);
 
   const street = L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}",
     {
       attribution:"© OpenStreetMap contributors",
       maxZoom:19
@@ -794,4 +676,5 @@ $("#pickLocate").onclick = () => {
 };
 
 /* ---------- Boot ---------- */
-if (user) showApp();
+go("home");
+fetchReports();
